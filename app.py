@@ -2,8 +2,9 @@ import streamlit as st
 from datetime import datetime
 import os
 import sqlite3
+import pandas as pd
 
-conn = sqlite3.connect("specisobs.db")
+conn = sqlite3.connect("bol.db")
 c = conn.cursor()
 c.execute("""
     CREATE TABLE IF NOT EXISTS organisms (
@@ -16,7 +17,7 @@ c.execute("""
     )
 """)
 conn.commit()
-
+df = pd.read_sql_query("SELECT * FROM organisms", conn)
 st.set_page_config(page_title="Species Addition", layout="centered")
 
 st.title("Book of Life")
@@ -29,7 +30,7 @@ with st.container(border=True):
 col1, col2 = st.columns([2, 2])
 with col1:
     species = st.text_input("Species", placeholder="Sitta canadensis")
-    date = st.text_input("Date/Time", placeholder="Month DD, YYYY")
+    date = st.text_input("Date/Time", placeholder="Mon DD, YYYY TT:TTA/P")
 with col2:
     common_name = st.text_input("Common Name", placeholder="Red-breasted Nuthatch")        
     loc = st.text_input("Location", placeholder="Kennebec, ME")
@@ -60,7 +61,8 @@ if st.button("Submit"):
             VALUES (?, ?, ?, ?, ?)
         """, (species, common_name, loc, date, image_path))
         conn.commit()
-        st.success(f"Successfully added {common_name} to the Book of Life.")
+        st.success(f"Successfully added {common_name} to the Book of Life!")
     else:
         st.error("No players, empty field.")
 
+st.dataframe(df)
