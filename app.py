@@ -22,15 +22,15 @@ st.set_page_config(page_title="Species Addition", layout="centered")
 
 st.title("Book of Life")
 st.markdown("@sixie6e")
-st.image("/img/rbn.png")
+st.image("/img/rbn1.png")
 
 with st.container(border=True):
     uploaded_file = st.file_uploader("Image", type=["png", "jpg", "jpeg"])
 
-col1, col2 = st.columns([2, 2])
+col1, col2 = st.columns(2)
 with col1:
     species = st.text_input("Species", placeholder="Sitta canadensis")
-    date = st.text_input("Date/Time", placeholder="Mon DD, YYYY TT:TTA/P")
+    date = st.text_input("Date/Time", placeholder="Month DD, YYYY")
 with col2:
     common_name = st.text_input("Common Name", placeholder="Red-breasted Nuthatch")        
     loc = st.text_input("Location", placeholder="Kennebec, ME")
@@ -62,7 +62,25 @@ if st.button("Submit"):
         """, (species, common_name, loc, date, image_path))
         conn.commit()
         st.success(f"Successfully added {common_name} to the Book of Life!")
+        df = pd.read_sql_query("SELECT * FROM organisms", conn)
     else:
         st.error("No players, empty field.")
 
-st.dataframe(df)
+if not df.empty:
+    num_columns = 3
+    for i in range(0, len(df), num_columns):
+        cols = st.columns(num_columns)
+        for j in range(num_columns):
+            if i + j < len(df):
+                row = df.iloc[i + j]
+                with cols[j]:
+                    with st.container(border=True):
+                        st.subheader(row["common_name"])
+                        img_path = row["image_path"]
+                        if img_path and os.path.exists(img_path):
+                            st.image(img_path)
+                        else:
+                            st.caption("No Image Available")
+                        
+                        if st.button("View Details", key=f"btn_{row['id']}"):
+                            st.info(f"{row['species']}\n\n{row['location']}\n\n{row['date']}")
